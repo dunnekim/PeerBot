@@ -1,0 +1,5 @@
+{
+  "name": "PeerBot - Market Screener",
+  "description": "A financial analysis tool for KOSPI/KOSDAQ companies. Upload your processed data to screen peers, analyze financials, and use AI to summarize business descriptions.",
+  "requestFramePermissions": []
+}
