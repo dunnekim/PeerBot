@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PeerBot - 기업 분석 및 피어 파인더</title>
     
-    <!-- React & Tailwind Libraries (CDN) -->
+    <!-- 1. 필수 라이브러리 (React, Babel, Recharts, Tailwind) - 공개 CDN 사용 -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/recharts@2.10.3/umd/Recharts.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Config -->
+    <!-- 2. Tailwind 설정 -->
     <script>
       tailwind.config = {
         theme: {
@@ -33,18 +33,21 @@
       ::-webkit-scrollbar-thumb:hover { background: #64748b; }
       .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
       @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script type="importmap">
 {
   "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.6",
-    "recharts": "https://aistudiocdn.com/recharts@^3.5.1"
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.6"
   }
 }
 </script>
@@ -52,16 +55,19 @@
 <body>
     <div id="root"></div>
 
+    <!-- 3. 통합 애플리케이션 로직 -->
     <script type="text/babel">
+        // Global Variable Destructuring
         const { useState, useEffect, useMemo } = React;
         const { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip } = Recharts;
 
-        // --- 1. ICONS (SVG) ---
+        // --- ICONS (SVG Components) ---
         const Icon = ({ path, className }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
                 {path}
             </svg>
         );
+        
         const Icons = {
             Search: (props) => <Icon {...props} path={<><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></>} />,
             Sliders: (props) => <Icon {...props} path={<><line x1="4" x2="20" y1="21" y2="21"/><line x1="4" x2="20" y1="14" y2="14"/><line x1="4" x2="20" y1="7" y2="7"/><circle cx="12" cy="14" r="2"/><circle cx="12" cy="7" r="2"/><circle cx="12" cy="21" r="2"/></>} />,
@@ -81,7 +87,7 @@
             Key: (props) => <Icon {...props} path={<><path d="m21 2-2 2m-7.6 7.6a6.5 6.5 0 1 1-5.3-5.3"/><circle cx="8" cy="8" r="3"/><path d="M7 17v5"/><path d="M12 17v2"/><path d="M17 12v5"/></>} />
         };
 
-        // --- 2. MOCK DATA ---
+        // --- MOCK DATA ---
         const MOCK_DATA = [
             { corp_code: "00126380", stock_code: "005930", corp_name: "삼성전자", market: "KOSPI", sector: "전기전자", sales: 3022314, op_profit: 433766, net_income: 399074, assets: 4484245, liabilities: 936749, equity: 3547496, market_cap: 4500000, per: 15.2, pbr: 1.4, roe: 11.5, biz_description_raw: "DX부문(모바일, TV), DS부문(메모리, 시스템LSI, 파운드리), SDC, Harman으로 구성. 글로벌 메모리 반도체 시장 점유율 1위 유지." },
             { corp_code: "00164779", stock_code: "000660", corp_name: "SK하이닉스", market: "KOSPI", sector: "전기전자", sales: 446216, op_profit: 68094, net_income: 22416, assets: 1039754, liabilities: 388523, equity: 651231, market_cap: 950000, per: 22.1, pbr: 1.8, roe: 4.5, biz_description_raw: "DRAM, NAND Flash, MCP 등 메모리 반도체 생산 및 판매. AI 서버용 고대역폭 메모리(HBM) 시장 선도." },
@@ -92,7 +98,7 @@
             { corp_code: "01234567", stock_code: "277810", corp_name: "레인보우로보틱스", market: "KOSDAQ", sector: "기계", sales: 150, op_profit: -10, net_income: -5, assets: 3000, liabilities: 500, equity: 2500, market_cap: 35000, per: 0, pbr: 12.5, roe: -0.5, biz_description_raw: "협동로봇 및 이족보행 로봇(HUBO) 개발. 다양한 산업군(F&B, 제조)에 로봇 플랫폼 제공." }
         ];
 
-        // --- 3. SERVICES (Data Logic) ---
+        // --- DATA SERVICE LOGIC ---
         const getOpMargin = (c) => c.sales === 0 ? 0 : ((c.op_profit / c.sales) * 100);
 
         const parseCSV = (csvText) => {
@@ -114,33 +120,37 @@
             return data;
         };
 
-        // Keyword Translation Map for Smart Search
         const KEYWORD_TRANSLATIONS = {
-            '반도체': ['Semiconductor', 'Memory', 'Chip'], '배터리': ['Battery', 'EV'], '2차전지': ['Battery', 'Cathode'],
-            '바이오': ['Bio', 'Pharm'], '제약': ['Pharm', 'Medicine'], '자동차': ['Auto', 'Car', 'Mobility'],
-            '플랫폼': ['Platform', 'Internet'], '게임': ['Game'], '인공지능': ['AI', 'Data'], '로봇': ['Robot']
+            '반도체': ['Semiconductor', 'Memory', 'Chip', 'Foundry'],
+            '배터리': ['Battery', 'Cathode', 'Anode', 'EV', 'Energy'],
+            '2차전지': ['Battery', 'Cathode', 'EV'],
+            '바이오': ['Bio', 'Pharmaceutical', 'Drug'],
+            '제약': ['Pharmaceutical', 'Drug', 'Medicine'],
+            '자동차': ['Auto', 'Vehicle', 'Car', 'Mobility'],
+            '플랫폼': ['Platform', 'Internet', 'Service', 'App'],
+            '게임': ['Game', 'Gaming'],
+            '인공지능': ['AI', 'Artificial Intelligence', 'Data'],
+            '로봇': ['Robot', 'Robotics'],
+            '화학': ['Chemical'],
+            '전자': ['Electronics', 'Device'],
         };
 
         const parseSmartQuery = (query) => {
             const conditions = { minSales: 0, minOpMargin: 0, targetMarket: null, sizeCategory: null, keywords: [] };
             
-            // 1. Numeric (Subject + Value)
             const salesMatch = query.match(/(?:sales|revenue|매출|매출액)[^\d]*(\d+)/i);
             if (salesMatch) conditions.minSales = parseFloat(salesMatch[1]);
 
             const marginMatch = query.match(/(?:margin|profit|op|영업이익|마진율|이익률)[^\d]*(\d+(?:\.\d+)?)/i);
             if (marginMatch) conditions.minOpMargin = parseFloat(marginMatch[1]);
 
-            // 2. Market
             if (query.match(/kospi|코스피|유가증권/i)) conditions.targetMarket = 'KOSPI';
             if (query.match(/kosdaq|코스닥/i)) conditions.targetMarket = 'KOSDAQ';
 
-            // 3. Size
             if (query.match(/large|big|대형주/i)) conditions.sizeCategory = 'LARGE';
             else if (query.match(/mid|medium|중형주/i)) conditions.sizeCategory = 'MID';
             else if (query.match(/small|소형주/i)) conditions.sizeCategory = 'SMALL';
 
-            // 4. Keyword Cleanup
             let cleanQuery = query
                 .replace(/(?:sales|revenue|매출|매출액)[^\d]*(\d+)(?:억|조|원)?(?:이상|넘|초과)?/ig, '')
                 .replace(/(?:margin|profit|op|영업이익|마진율|이익률)[^\d]*(\d+(?:\.\d+)?)(?:%|프로)?(?:이상|넘|초과)?/ig, '')
@@ -165,7 +175,7 @@
             let effMargin = filter.minOpMargin;
             let effMarket = filter.market;
             let keywords = [];
-            let sizeFilter = filter.size; // UI filter takes precedence, or Smart filter overrides it below
+            let sizeFilter = filter.size;
 
             if (filter.mode === 'SMART' && filter.keyword) {
                 const parsed = parseSmartQuery(filter.keyword);
@@ -182,7 +192,6 @@
             if (effSales > 0) result = result.filter(c => c.sales >= effSales);
             if (effMargin > 0) result = result.filter(c => getOpMargin(c) >= effMargin);
             
-            // Size: LARGE(>10T), MID(1T~10T), SMALL(<1T). Data unit: 100M KRW
             if (sizeFilter === 'LARGE') result = result.filter(c => c.market_cap >= 100000); 
             else if (sizeFilter === 'MID') result = result.filter(c => c.market_cap >= 10000 && c.market_cap < 100000);
             else if (sizeFilter === 'SMALL') result = result.filter(c => c.market_cap < 10000);
@@ -196,7 +205,7 @@
             return result;
         };
 
-        // --- 4. COMPONENTS ---
+        // --- COMPONENTS ---
 
         const SearchBar = ({ value, mode, onChange, onModeChange, onToggleFilters }) => (
             <div className="relative max-w-2xl mx-auto mb-8 group">
@@ -298,7 +307,7 @@
 
                         <div>
                             <h3 className="text-sm uppercase text-slate-500 font-semibold mb-3 flex items-center gap-2"><Icons.FileText className="w-4 h-4" /> 사업 내용 (요약)</h3>
-                            <div className="bg-slate-800/50 p-4 rounded-xl text-slate-300 text-sm border border-slate-700 max-h-48 overflow-y-auto">{company.biz_description_raw}</div>
+                            <div className="bg-slate-800/50 p-4 rounded-xl text-slate-300 text-sm border border-slate-700 max-h-48 overflow-y-auto custom-scrollbar">{company.biz_description_raw}</div>
                         </div>
 
                         <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-emerald-500/30 rounded-xl p-6 relative overflow-hidden">
@@ -312,6 +321,7 @@
                                     <div className="relative">
                                         <Icons.Key className="absolute left-3 top-2.5 w-4 h-4 text-slate-500"/>
                                         <input type="password" placeholder="Gemini API Key (저장되지 않음)" value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 pl-10 text-sm text-white focus:border-emerald-500 outline-none" />
+                                        <p className="text-[10px] text-slate-500 mt-1 pl-1">* GitHub Pages와 같은 정적 환경에서는 보안을 위해 API Key를 직접 입력해야 합니다.</p>
                                     </div>
                                 )}
                             </div>
